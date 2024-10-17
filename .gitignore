@@ -1,0 +1,16 @@
+dynamic_*/
+*.sln
+*.vcxproj*
+*.pdb
+*.exp
+*.lib
+.vs/
+*.tlog/
+*.obj
+*.idb
+calculator/x64/
+*.recipe
+*.log
+*.recipe
+*.ilk
+build/
