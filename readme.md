@@ -1,3 +1,10 @@
-**5030102/20201**
+**Calculator**
 
-Lyapustin Egor
+Для сборки с помощью CMake:
+
+в директории calculator выполнить следующие команды
+```
+mkdir build
+cmake ..
+cmake --build
+```
