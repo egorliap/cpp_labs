@@ -8,6 +8,14 @@
 class Calculator {
 private:
     Loader& loader;
+    std::stack<double> stack;
+
+    double getOneToken();
+    std::tuple<double, double> getTwoTokens();
+    double checkedDivision(double a, double b);
+    void processOperator(const Token& token);
+    void processFunction(const Token& token);
+    void pushResult(double res);
 
     std::string skim_expression(const std::string& expression);
 

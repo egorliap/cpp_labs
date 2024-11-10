@@ -85,91 +85,81 @@ void Calculator::shunting_yard(const std::vector<Token>& expr, std::vector<Token
 }
 
 double Calculator::process_expression(std::vector<Token>& rpn_expr) {
-    std::stack<double> stack;
-    auto getOneToken = [&]()
-    {
-        if (stack.empty()) throw std::invalid_argument("Not enough arguments in function!");
-        double x = stack.top();
-        stack.pop();
-        return x;
-    };
-    auto getTwoTokens = [&]()
-    { 
-        double x = getOneToken(), y = getOneToken();
-        return std::tuple{ y,x }; 
-    };
-    auto checkedDivision = [&](double a, double b)
-    {
-        if (b == 0.f) throw std::invalid_argument("Division by zero");
-        return a / b; 
-    };
-
-    double res;
-    for (auto& token : rpn_expr)
-    {
-        const std::string& str = token.getStr();
-
-        switch (token.getType())
-        {
-
+    for (auto& token : rpn_expr) {
+        switch (token.getType()) {
         case Token::INT_LITERAL:
-            stack.push(std::stof(str));
-            break;
-
         case Token::FLOAT_LITERAL:
-            stack.push(std::stof(str));
+            stack.push(std::stof(token.getStr()));
             break;
 
         case Token::OPERATOR:
-
-            switch (token.getAsc())
-            {
-
-            case Token::LEFT:
-            {
-                auto [a, b] = getTwoTokens();
-                if (str == "+") res = a + b;
-                else if (str == "-") res = a - b;
-                else if (str == "*") res = a * b;
-                else if (str == "/") res = checkedDivision(a, b);
-                else if (str == "^") res = process_function("pow", a, b);
-                else throw std::invalid_argument("Unknown operator!");
-                break;
-            }
-
-            case Token::RIGHT:
-            {
-                auto a = getOneToken();
-                if (str == "-") {
-                    res = -a;
-                }
-                else if (str == "+") {
-                    res = a;
-                }
-                else {
-                    throw std::invalid_argument("Unknown operator!");
-                }
-                break;
-            }
-
-            case Token::NONE: {
-                throw std::invalid_argument("Operator must have associativity!");
-                break;
-            }
-            }
-            stack.push(res);
+            processOperator(token);
             break;
+
         case Token::FUNCTION:
-                auto a = getOneToken();
-                res = process_function(token.getStr(), a);
-                stack.push(res);
-           
+            processFunction(token);
             break;
+
+        default:
+            throw std::invalid_argument("Unknown token type!");
         }
     }
     return stack.top();
 }
+double Calculator::getOneToken() {
+    if (stack.empty()) throw std::invalid_argument("Not enough arguments in function!");
+    double x = stack.top();
+    stack.pop();
+    return x;
+}
 
+std::tuple<double, double> Calculator::getTwoTokens() {
+    double x = getOneToken();
+    double y = getOneToken();
+    return std::make_tuple(y, x);
+}
+
+double Calculator::checkedDivision(double a, double b) {
+    if (b == 0.f) throw std::invalid_argument("Division by zero");
+    return a / b;
+}
+
+void Calculator::processOperator(const Token& token) {
+    auto [a, b] = getTwoTokens();
+    double res;
+
+    switch (token.getAsc()) {
+    case Token::LEFT:
+        if (token.getStr() == "+") res = a + b;
+        else if (token.getStr() == "-") res = a - b;
+        else if (token.getStr() == "*") res = a * b;
+        else if (token.getStr() == "/") res = checkedDivision(a, b);
+        else if (token.getStr() == "^") res = process_function("pow", a, b);
+        else throw std::invalid_argument("Unknown operator!");
+        break;
+
+    case Token::RIGHT:
+        if (token.getStr() == "-") res = -a;
+        else if (token.getStr() == "+") res = a;
+        else throw std::invalid_argument("Unknown operator!");
+        break;
+
+    case Token::NONE:
+        throw std::invalid_argument("Operator must have associativity!");
+    }
+
+    pushResult(res);
+}
+
+void Calculator::processFunction(const Token& token) {
+    double a = getOneToken();
+    double res = process_function(token.getStr(), a);
+    pushResult(res);
+}
+
+void Calculator::pushResult(double res) {
+    stack.push(res);
+}
 
 void Calculator::evaluate_expression(const std::string& expression) {
     std::string skimmed_expr = skim_expression(expression);
